@@ -1,7 +1,9 @@
 package hxfw;
 
 import flash.display.Bitmap;
+import flash.display.BlendMode;
 import flash.display.IBitmapDrawable;
+import flash.geom.ColorTransform;
 import flash.geom.Matrix;
 import flash.geom.Rectangle;
 
@@ -69,6 +71,6 @@ class Camera extends Rectangle
 	
 	public function draw(drawable:IBitmapDrawable, matrix:Matrix)
 	{
-		renderTarget.bitmapData.draw(drawable, matrix);
+		renderTarget.bitmapData.draw(drawable, matrix, new ColorTransform(), BlendMode.NORMAL);
 	}
 }

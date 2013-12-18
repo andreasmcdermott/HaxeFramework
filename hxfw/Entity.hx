@@ -3,33 +3,32 @@ package hxfw;
 import flash.display.IBitmapDrawable;
 import flash.geom.Matrix;
 import flash.geom.Point;
+import flash.geom.Rectangle;
 
 /**
  * ...
  * @author Andreas McDermott
  */
-class Entity
+class Entity extends Rectangle
 {
 	private var drawable:IBitmapDrawable;
-	private var cpos:Point;
-	private var rpos:Point;
-	private var pos:Point;
-	private var size:Point;
 	private var angle:Float;
-	private var scale:Point;
+	private var scaleX:Float;
+	private var scaleY:Float;
+	private var a:Float;
+	private var r:Float;
+	private var g:Float;
+	private var b:Float;
 	private var parent:Group;
 	private var timer:Timer;
 	
-	public function new(x:Float, y:Float, w:Int, h:Int) 
+	public function new(x:Float, y:Float, w:Float, h:Float) 
 	{
-		cpos = new Point();
-		rpos = new Point();
-		pos = new Point();
+		super(x, y, w, h);
 		angle = 0.0;
-		scale = new Point(1, 1);
-		setPos(x, y);
-		size = new Point(w, h);
+		scaleX = scaleY = 1.0;
 		timer = new Timer();
+		r = g = b = a = 1.0;
 	}
 	
 	public function assignDrawable(drawable:IBitmapDrawable):Entity
@@ -38,21 +37,32 @@ class Entity
 		return this;
 	}
 	
-	public function setScale(x:Float, y:Float)
+	public function setColor(color:UInt):Entity
 	{
-		scale.setTo(x, y);
+		var rgba = Color.toRGBAFromHex(color);
+		r = rgba.r;
+		g = rgba.g;
+		b = rgba.b;
+		a = rgba.a;
+		return this;
 	}
 	
-	public function setSize(w:Int, h:Int)
+	public function setScale(x:Float, y:Float)
 	{
-		size.setTo(w, h);
+		scaleX = x;
+		scaleY = y;
+	}
+	
+	public function setSize(w:Float, h:Float)
+	{
+		width = w;
+		height = h;
 	}
 	
 	public function setPos(x:Float, y:Float)
 	{
-		pos.setTo(x, y);
-		cpos.setTo(Std.int(x / 16), Std.int(y / 16));
-		rpos.setTo((x - cpos.x * 16) / 16, (y - cpos.y * 16) / 16);
+		this.x = x;
+		this.y = y;
 	}
 	
 	private inline function getAngle():Float
@@ -68,11 +78,11 @@ class Entity
 		if (parent != null)
 		{
 			var s = parent.getScale();
-			s.x *= scale.x;
-			s.y *= scale.y;
+			s.x *= scaleX;
+			s.y *= scaleY;
 			return s;
 		}
-		else return new Point(scale.x, scale.y);
+		else return new Point(scaleX, scaleY);
 	}
 	
 	private inline function getPos():Point
@@ -80,10 +90,10 @@ class Entity
 		if (parent != null) 
 		{
 			var p = parent.getPos();
-			p.offset(pos.x, pos.y);
+			p.offset(x, y);
 			return p;
 		}
-		else return new Point(pos.x, pos.y);
+		else return new Point(x, y);
 	}
 	
 	private inline function getMatrix()
@@ -106,7 +116,6 @@ class Entity
 	private function draw()
 	{
 		if (drawable == null) return;
-		
 		Camera.drawToActiveCamera(drawable, getMatrix());
 	}
 }
