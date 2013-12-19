@@ -22,7 +22,7 @@ class TextDisplay extends Entity
 {
 	
 	private var textField:TextField;
-	private var onWriteCompleted:Void->Void;
+	private var onTypingCompleted:Void->Void;
 	
 	public function new(x:Float, y:Float, w:Float, h:Float, str:String = "") 
 	{
@@ -46,9 +46,9 @@ class TextDisplay extends Entity
 		return this;
 	}
 	
-	public function setOnWriteCompleted(func:Void->Void):TextDisplay
+	public function setOnTypingCompleted(func:Void->Void):TextDisplay
 	{
-		onWriteCompleted = func;
+		onTypingCompleted = func;
 		return this;
 	}
 	
@@ -64,6 +64,37 @@ class TextDisplay extends Entity
 		return this;
 	}
 	
+	public function typeText(lines:List<TextLine>, typingSpeed:Float, ?onTypingCompleted:Void->Void = null):TextDisplay
+	{
+		var txt = "";
+		var index = 0;
+		var counter = 0;
+		
+		if (onTypingCompleted == null) onTypingCompleted = this.onTypingCompleted;
+		
+		timer.delay(function () 
+		{
+			var line = lines.pop();
+			if (line.behavior == "replace")
+			{
+				txt = line.text;
+				index = 0;
+			}
+			else txt += line.text;
+			
+			if(!lines.isEmpty()) timer.again(lines.first().delay);
+			else if (onTypingCompleted != null) onTypingCompleted();
+		}, lines.first().delay);
+		
+		timer.repeat(function ()
+		{
+			if (index < txt.length) index++;
+			setText(txt.substr(0, index) + (++counter % 8 < 4 ? "_" : ""));
+		}, typingSpeed);
+		
+		return this;
+	}
+	
 	public function loadFromXml(id:String):TextDisplay
 	{
 		var xml = Xml.parse(Assets.getText(id));
@@ -74,7 +105,6 @@ class TextDisplay extends Entity
 		else
 		{
 			var typingSpeed:Float = root.get("typingSpeed") != null ? Std.parseFloat(root.get("typingSpeed")) : 0.1;
-			var useCursor:Bool = root.get("cursor") == "false" ? false : true;
 			
 			var lines:List<TextLine> = new List<TextLine>();
 			for (line in root.elementsNamed("line"))
@@ -86,30 +116,7 @@ class TextDisplay extends Entity
 				});
 			}
 			
-			var txt = "";
-			var index = 0;
-			var showCursor = false;
-			var counter = 0;
-			
-			timer.delay(function () 
-			{
-				var line = lines.pop();
-				if (line.behavior == "replace")
-				{
-					txt = line.text;
-					index = 0;
-				}
-				else txt += line.text;
-				
-				if(!lines.isEmpty()) timer.again(lines.first().delay);
-				else if (onWriteCompleted != null) onWriteCompleted();
-			}, lines.first().delay);
-			
-			timer.repeat(function ()
-			{
-				if (index < txt.length) index++;
-				setText(txt.substr(0, index) + (useCursor && ++counter % 8 < 4 ? "_" : ""));
-			}, typingSpeed);
+			typeText(lines, typingSpeed);
 		}
 		
 		return this;
