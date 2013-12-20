@@ -6,12 +6,13 @@ package hxfw;
  */
 class Group extends Entity
 {
-	private var forceBounds:Bool;
+	public var forceBounds(default, null):Bool;
 	private var children:Array<Entity>;
 	
 	public function new(x:Float = 0, y:Float = 0, w:Int = 0, h:Int = 0) 
 	{
 		super(x, y, w, h);
+		forceBounds = false;
 		children = new Array<Entity>();
 	}
 	

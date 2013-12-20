@@ -1,6 +1,7 @@
 package hxfw;
 
 import flash.display.IBitmapDrawable;
+import flash.geom.ColorTransform;
 import flash.geom.Matrix;
 import flash.geom.Point;
 import flash.geom.Rectangle;
@@ -96,7 +97,14 @@ class Entity extends Rectangle
 		else return new Point(x, y);
 	}
 	
-	private inline function getMatrix()
+	private inline function getRect():Rectangle
+	{
+		if (parent != null && parent.forceBounds)
+			return parent;
+		return this;
+	}
+	
+	private inline function getMatrix():Matrix
 	{
 		var matrix = new Matrix();
 		matrix.identity();
@@ -116,6 +124,6 @@ class Entity extends Rectangle
 	private function draw()
 	{
 		if (drawable == null) return;
-		Camera.drawToActiveCamera(drawable, getMatrix());
+		Camera.drawToActiveCamera(drawable, getMatrix(), new ColorTransform(r, g, b, a), getRect());
 	}
 }

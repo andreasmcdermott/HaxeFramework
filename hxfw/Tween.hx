@@ -6,7 +6,7 @@ package hxfw;
  * Based on code by @x_rxi
  */
 
-typedef Target = { start:Float, difference:Float }
+typedef Target = { start:Float, end:Float, difference:Float }
 
 enum EaseType
 {
@@ -16,6 +16,13 @@ enum EaseType
 	SquaredEaseOut;
 	ExpoEaseIn;
 	ExpoEaseOut;
+}
+
+enum RepeatType
+{
+	None;
+	Reverse;
+	Restart;
 }
 
 class Tween
@@ -60,28 +67,60 @@ class Tween
 			
 			if (currentProgress >= 1.0)
 			{
-				tweens.remove(tween);
 				if (tween.onComplete != null)
 					tween.onComplete(tween.target);
+				
+				if (tween.repeatType == RepeatType.None || tween.repeatCount == 0)
+					tweens.remove(tween);
+				else
+				{
+					tween.progress = 0.0;
+					tween.repeatCount--;
+				
+					if (tween.repeatType == RepeatType.Reverse)
+						tween.reset();
+				}
 			}
 		}
 	}
 	
 	public static function tween(target:Dynamic, time:Float, fields:Dynamic = null):Tween
 	{
-		for (tween in tweens)
-		{
-			if (tween.target != target)
-				continue;
+		var tween = getTweenByTarget(target);
+		if(tween != null)
 			for (key in Reflect.fields(fields))
-			{
 				tween.fields.remove(key);
-			}
-		}
 		
-		var tween = new Tween(target, time, fields);
+		tween = new Tween(target, time, fields);
 	  tweens.add(tween);
 		return tween;
+	}
+	
+	public static function repeatTween(target:Dynamic, repeat:RepeatType):Tween
+	{
+		var tween = getTweenByTarget(target);
+		if (tween != null)
+		{
+			tween.repeatType = repeat;
+			tween.repeatCount = 1;
+		}
+		return tween;
+	}
+	
+	public static function abortTween(target:Dynamic)
+	{
+		var tween = getTweenByTarget(target);
+		if (tween != null)
+			tweens.remove(tween);
+	}
+	
+	private inline static function getTweenByTarget(target:Dynamic):Tween
+	{
+		for (tween in tweens)
+			if (tween.target == target)
+				return tween;
+		
+		return null;
 	}
 	
 	// End static
@@ -90,12 +129,16 @@ class Tween
 	private var target:Dynamic;
 	private var rate:Float;
 	private var easing:EaseType;
+	private var repeatType:RepeatType;
+	private var repeatCount:Int;
 	private var delayCounter:Float;
 	private var onComplete:Dynamic->Void;
 	private var fields:Map<String, Target>;
 	
 	public function new(target:Dynamic, time:Float, variables:Dynamic) 
 	{
+		repeatType = RepeatType.None;
+		repeatCount = -1;
 		delayCounter = 0.0;
 		rate = (time > 0.0) ? 1.0 / time : 1.0;
 		progress = 0.0;
@@ -104,8 +147,9 @@ class Tween
 		fields = new Map<String, Target>();
 		for (key in Reflect.fields(variables))
 		{
-			var targetValue:Float = Reflect.getProperty(target, key);
-			fields.set(key, { start: targetValue, difference: Reflect.field(variables, key) - targetValue } );
+			var originalValue:Float = Reflect.getProperty(target, key);
+			var newValue:Float = Reflect.field(variables, key);
+			fields.set(key, { start: originalValue, end: newValue, difference: newValue - originalValue } );
 		}
 	}
 	
@@ -125,5 +169,23 @@ class Tween
 	{
 		this.easing = easing;
 		return this;
+	}
+	
+	public function repeat(repeat:RepeatType, count:Int = -1):Tween
+	{
+		repeatType = repeat;
+		repeatCount = count;
+		return this;
+	}
+	
+	private function reset()
+	{
+		for (field in fields)
+		{
+			var temp = field.start;
+			field.start = field.end;
+			field.end = temp;
+			field.difference = field.end - field.start;
+		}
 	}
 }

@@ -62,8 +62,9 @@ class Input
 		if (!keysDown.exists(e.keyCode))
 		{
 			keysPressedPending.set(e.keyCode, 0);
-      keysDown.set(e.keyCode, Game.TotalElapsed);
 		}
+		
+		keysDown.set(e.keyCode, Game.TotalElapsed);
 	}
 	
 	private static function onKeyUp(e:Dynamic)

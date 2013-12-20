@@ -35,7 +35,7 @@ class Game extends Sprite
 	
 	public static function registerEventListener(type:String, listener:Dynamic->Void)
 	{
-		instance.addEventListener(type, listener);
+		Lib.current.stage.addEventListener(type, listener);
 	}
 	
 	// End static
@@ -63,7 +63,7 @@ class Game extends Sprite
 		lastFrameTime = now;
 		TotalElapsed += Dt;
 		
-		Camera.clearToActiveCamera();
+		Camera.clearActiveCamera();
 		Input.update();
 		Tween.update();
 		Scene.doFrame();

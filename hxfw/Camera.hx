@@ -17,18 +17,18 @@ class Camera extends Rectangle
 	
 	private static var activeCamera:Camera;
 	
-	public static function clearToActiveCamera()
+	public static function clearActiveCamera()
 	{
 		if (activeCamera == null) return;
 		
 		activeCamera.clear();
 	}
 	
-	public static function drawToActiveCamera(drawable:IBitmapDrawable, matrix:Matrix)
+	public static function drawToActiveCamera(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, rect:Rectangle, ?blendMode:BlendMode = null)
 	{
 		if (activeCamera == null) return;
 		
-		activeCamera.draw(drawable, matrix);
+		activeCamera.draw(drawable, matrix, color, rect, blendMode);
 	}
 	
 	// End static
@@ -69,8 +69,8 @@ class Camera extends Rectangle
 		renderTarget.bitmapData.fillRect(this, 0xff000000 | clearColor);
 	}
 	
-	public function draw(drawable:IBitmapDrawable, matrix:Matrix)
+	public function draw(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, rect:Rectangle, ?blendMode:BlendMode = null)
 	{
-		renderTarget.bitmapData.draw(drawable, matrix, new ColorTransform(), BlendMode.NORMAL);
+		renderTarget.bitmapData.draw(drawable, matrix, color, blendMode != null ? blendMode : BlendMode.NORMAL, rect);
 	}
 }
