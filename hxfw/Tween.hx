@@ -116,11 +116,17 @@ class Tween
 	
 	private inline static function getTweenByTarget(target:Dynamic):Tween
 	{
+		var foundTween = null;
 		for (tween in tweens)
+		{
 			if (tween.target == target)
-				return tween;
+			{
+				foundTween = tween;
+				break;
+			}
+		}
 		
-		return null;
+		return foundTween;
 	}
 	
 	// End static

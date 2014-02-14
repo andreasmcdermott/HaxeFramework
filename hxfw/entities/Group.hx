@@ -1,4 +1,5 @@
-package hxfw;
+package hxfw.entities;
+import hxfw.entities.Entity;
 
 /**
  * ...
@@ -34,6 +35,23 @@ class Group extends Entity
 		for (child in children)
 			child.parent = null;
 		children = new Array<Entity>();
+	}
+	
+	public function iterator():Iterator<Entity>
+	{
+		return children.iterator();
+	}
+	
+	override public function resolveCollision(other:Entity):Bool
+	{
+		var collision:Bool = super.resolveCollision(other);
+		for (child in children)
+		{
+			if (child.resolveCollision(other))
+				collision = true;
+		}
+		
+		return collision;
 	}
 	
 	override private function update()

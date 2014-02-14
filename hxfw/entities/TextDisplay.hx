@@ -1,9 +1,11 @@
-package hxfw;
+package hxfw.entities;
 
+import flash.geom.ColorTransform;
 import flash.text.TextField;
 import flash.text.TextFormat;
 import flash.text.TextLineMetrics;
-import haxe.Json;
+import hxfw.Camera;
+import hxfw.entities.TextDisplay.Shadow;
 import openfl.Assets;
 
 
@@ -14,15 +16,23 @@ typedef TextLine =
 	behavior:String
 };
 
+typedef Shadow = 
+{
+	offsetX:Float,
+	offsetY:Float,
+	color:UInt
+}
+
 /**
  * ...
  * @author Andreas McDermott
  */
 class TextDisplay extends Entity
 {
-	
 	private var textField:TextField;
 	private var onTypingCompleted:Void->Void;
+	private var drawInScreenSpace:Bool;
+	private var shadow:Shadow;
 	
 	public function new(x:Float, y:Float, w:Float, h:Float, str:String = "") 
 	{
@@ -37,6 +47,48 @@ class TextDisplay extends Entity
 		textField.defaultTextFormat = Game.DefaultFont;
 		textField.embedFonts = true;
 		textField.setTextFormat(Game.DefaultFont);
+		drawInScreenSpace = false;
+		shadow = null;
+	}
+	
+	public function setShadow(offsetX:Float = 1, offsetY:Float = 1, color:UInt = 0xff000000):TextDisplay
+	{
+		shadow = { offsetX:offsetX, offsetY:offsetY, color:color };
+		return this;
+	}
+	
+	public function removeShadow():TextDisplay
+	{
+		shadow = null;
+		return this;
+	}
+	
+	override private function draw()
+	{
+		Camera.drawActiveCameraInScreeSpace(drawInScreenSpace);
+		drawShadow();
+		super.draw();
+		Camera.drawActiveCameraInScreeSpace(!drawInScreenSpace);
+	}
+	
+	private function drawShadow()
+	{
+		if (shadow == null) return;
+		
+		var origColor = getColor();
+		setColor(shadow.color);
+		x += shadow.offsetX;
+		y += shadow.offsetY;
+		super.draw();
+		setColor(origColor);
+		x -= shadow.offsetX;
+		y -= shadow.offsetY;
+	}
+	
+	public function drawTextInScreenSpace(d:Bool):TextDisplay
+	{
+		drawInScreenSpace = d;
+		return this;
 	}
 	
 	public function setFont(font:TextFormat):TextDisplay

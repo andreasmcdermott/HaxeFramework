@@ -61,7 +61,8 @@ class Color
 		var g = Std.int(color.g * 255);
 		var b = Std.int(color.b * 255);
 		
-		return (a << 24) + (r << 16) + (g << 8) + b;
+		var c = (a << 24) + (r << 16) + (g << 8) + b;
+		return c;
 	}
 	
 	public static function toIntFromRGB(color:RGB):UInt

@@ -1,5 +1,6 @@
 package hxfw;
 
+import hxfw.scenes.Scene;
 import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -16,7 +17,8 @@ class Game extends Sprite
 	
 	public static var Scale(default, null):Int = 3;
 	public static var Dt(default, null):Float;
-	public static var TotalElapsed(default, null):Float;
+	public static var Fps(default, null):Float = 0;
+	public static var TotalElapsed(default, null):Float = 0.0;
 	public static var Width(default, null):Int;
 	public static var Height(default, null):Int;
 	public static var DefaultFont(default, null):TextFormat;
@@ -43,6 +45,8 @@ class Game extends Sprite
 	private var ready:Bool;
 	private var lastFrameTime:Int = -1;
 	private var console:Console;
+	private var frameCount:Int = 0;
+	private var fpsTimer:Float = 0.0;
 	
 	public function new() 
 	{
@@ -62,6 +66,15 @@ class Game extends Sprite
 		Dt = (now - lastFrameTime) / 1000.0;
 		lastFrameTime = now;
 		TotalElapsed += Dt;
+		frameCount += 1;
+		fpsTimer += Dt;
+		
+		if (fpsTimer >= 1)
+		{
+			fpsTimer -= 1.0;
+			Fps = frameCount;
+			frameCount = 0;
+		}
 		
 		Camera.clearActiveCamera();
 		Input.update();
