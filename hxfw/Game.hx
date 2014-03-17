@@ -1,5 +1,6 @@
 package hxfw;
 
+import hxfw.entities.TextDisplay;
 import hxfw.scenes.Scene;
 import flash.display.DisplayObject;
 import flash.display.Sprite;

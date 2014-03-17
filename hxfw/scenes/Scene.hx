@@ -20,6 +20,14 @@ class Scene extends hxfw.entities.Group
 		}
 	}
 	
+	public static function addEntity(e:Entity)
+	{
+		if (activeScene != null)
+		{
+			activeScene.addChild(e);
+		}
+	}
+	
 	public static function goto(newScene:Scene):Scene 
 	{
 		var previousScene = activeScene;
@@ -59,7 +67,7 @@ class Scene extends hxfw.entities.Group
 	
 	private function load()
 	{
-		camera = new Camera(Game.Width, Game.Height, Game.Scale);
+		camera = new Camera(Game.Width, Game.Height).createRenderTarget(Game.Scale);
 		ready = true;
 	}
 	

@@ -28,10 +28,10 @@ class Camera extends Rectangle
 		activeCamera.clear();
 	}
 	
-	public static function drawToActiveCamera(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, rect:Rectangle, ?blendMode:BlendMode = null)
+	public static function drawToActiveCamera(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, ?blendMode:BlendMode = null)
 	{
 		if (activeCamera == null) return;
-		activeCamera.draw(drawable, matrix, color, rect, blendMode);
+		activeCamera.draw(drawable, matrix, color, blendMode);
 	}
 	
 	public static function convertToWorldSpace(sx:Float, sy:Float):Point
@@ -54,22 +54,39 @@ class Camera extends Rectangle
 	private var renderTarget:Bitmap;
 	private var clearColor:UInt;
 	private var target:Entity;
+	private var targetOffset:Point;
 	private var center:Point;
 	private var goto:Point;
 	private var lag:Float;
 	private var useScreenSpace:Bool;
 	
-	public function new(w:Int, h:Int, scale:Int) 
+	public function new(w:Int, h:Int) 
 	{
 		super(0, 0, w, h);
-		renderTarget = Factory.createRenderTarget(w, h, scale);
 		clearColor = 0xff000000;
 		goto = new Point();
 		center = new Point();
+		targetOffset = new Point();
 		setDelay(0.25);
 		useScreenSpace = false;
+	}
+	
+	public function setRenderTarget(renderTarget:Bitmap):Camera
+	{
+		this.renderTarget = renderTarget;
 		if (activeCamera == null)
 			activate();
+			
+		return this;
+	}
+	
+	public function createRenderTarget(scale:Int):Camera
+	{
+		renderTarget = Factory.createRenderTarget(Std.int(width), Std.int(height), scale);
+		if (activeCamera == null)
+			activate();
+			
+		return this;
 	}
 	
 	public function drawInScreenSpace(ss:Bool)
@@ -94,8 +111,10 @@ class Camera extends Rectangle
 	public function setTarget(target:Entity, jumpTo:Bool = true)
 	{
 		this.target = target;
+		var targetRect = target.getRect();
+		this.targetOffset.setTo(targetRect.width / 2, targetRect.height / 2);
 		if (jumpTo)
-			this.center = lookAt();
+			this.center.setTo(target.x + targetOffset.x, target.y + targetOffset.y);
 	}
 	
 	public function setDelay(delay:Float) 
@@ -113,34 +132,23 @@ class Camera extends Rectangle
 		renderTarget.bitmapData.fillRect(this, 0xff000000 | clearColor);
 	}
 	
-	private function lookAt():Point
-	{
-		if (target == null) return new Point(center.x, center.y);
-		
-		var targetRect = target.getRect();
-		
-		return new Point(
-			targetRect.x + targetRect.width / 2 - width / 2,
-			targetRect.y + targetRect.height / 2 - height / 2);
-	}
-	
 	public function update()
 	{
 		if (target == null) return;
-		
-		goto = lookAt();
+
+		goto.setTo(target.x + targetOffset.x -  width / 2, target.y + targetOffset.y - height / 2);
 		
 		center.x += Game.Dt * lag * (goto.x - center.x);
 		center.y += Game.Dt * lag * (goto.y - center.y);
 	}
 	
-	public function draw(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, rect:Rectangle, ?blendMode:BlendMode = null)
+	public function draw(drawable:IBitmapDrawable, matrix:Matrix, color:ColorTransform, ?blendMode:BlendMode = null)
 	{
 		if (!useScreenSpace)
 		{
-			matrix.translate( -center.x, -center.y);
-			rect.offset( -center.y, -center.y);
+			matrix.translate(-center.x, -center.y);
 		}
-		renderTarget.bitmapData.draw(drawable, matrix, color, blendMode != null ? blendMode : BlendMode.NORMAL);// , rect);
+		
+		renderTarget.bitmapData.draw(drawable, matrix, color, blendMode != null ? blendMode : BlendMode.NORMAL);
 	}
 }

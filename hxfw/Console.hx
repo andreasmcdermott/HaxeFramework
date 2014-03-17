@@ -33,14 +33,12 @@ class Console extends hxfw.entities.Group
 	// End static
 	
 	private var active:Bool = false;
-	private var fpsDisplay:TextDisplay;
 	
 	private function new() 
 	{
 		super(0, Game.Height, Game.Width, Std.int(Game.Height / 3) + 1);
 		forceBounds = true;
 		addChild(new Entity(0, 0, width, height).assignDrawable(Factory.createSquare(Std.int(width), Std.int(height), 0xcc000000)).inheritFromParent(true));
-		fpsDisplay = new TextDisplay(10, 10, 100, 16);
 	}
 	
 	override private function update()
@@ -58,7 +56,6 @@ class Console extends hxfw.entities.Group
 		
 		if (active)
 		{
-			fpsDisplay.setText(Std.string(Game.Fps));
 			super.update();
 		}
 	}
@@ -67,9 +64,9 @@ class Console extends hxfw.entities.Group
 	{
 		if (active)
 		{
+			Path.drawDebug();
 			Camera.drawActiveCameraInScreeSpace(true);
 			super.draw();
-			fpsDisplay.draw();
 			Camera.drawActiveCameraInScreeSpace(false);
 		}
 	}

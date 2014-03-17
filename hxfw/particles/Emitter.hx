@@ -158,14 +158,14 @@ class Emitter extends Group
 		
 		if (state == EmitterState.Once && children.length == 0) {
 			if (onDeath != null) { onDeath(this); }
-			else if(parent != null) { parent.removeChild(this); }
+			else if (parent != null) { removeSelf(); }
 		}
 	}
 	
 	private function newParticle()
 	{
 		var rotationDir = Random.sign();
-		var particle = new Particle(Random.floatBetween(x, x + width), Random.floatBetween(y, y + height))
+		var particle = new Particle(Random.floatBetween(x, x + width) - scaleFrom / 2, Random.floatBetween(y, y + height) - scaleFrom / 2)
 			.setVelocity(Random.floatBetween(velocityFromMin.x, velocityFromMax.x), 
 				Random.floatBetween(velocityFromMin.y, velocityFromMax.y))
 			.setRotationSpeed(rotationSpeedFrom * rotationDir)
@@ -184,7 +184,7 @@ class Emitter extends Group
 			.delay(Random.floatBetween(delayMin, delayMax))
 			.ease(easing)
 			.then(function (p:Particle) {
-				p.parent.removeChild(p);
+				p.removeSelf();
 			});
 			
 		addChild(particle);

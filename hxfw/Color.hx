@@ -29,6 +29,15 @@ class Color
 	public static var Cyan(default, null):UInt = 0xff00ffff;
 	public static var Yellow(default, null):UInt = 0xffffff00;
 	
+	public static function desaturate(color:UInt, strength:Float):UInt
+	{
+		var rgb = toRGBFromHex(color);
+		var gray:Float = rgb.g * 0.59 + rgb.r * 0.3 + rgb.b * 0.11;
+		return toHexFromRGBA( { r: rgb.r * strength + gray * (1 - strength),
+			g: rgb.g * strength + gray * (1 - strength),
+			b: rgb.b * strength + gray * (1 - strength), a:1 });
+	}
+	
 	public static function random(a:Float = 1.0):UInt
 	{
 		return toHexFromInt(Std.random(255), Std.random(255), Std.random(255), Std.int(a * 255));
@@ -44,6 +53,15 @@ class Color
 		};
 	}
 	
+	public static function toRGBFromHex(color:UInt):RGB
+	{
+		return {
+			r: ((color >> 16) & 0xff) / 255.0,
+			g: ((color >> 8) & 0xff) / 255.0,
+			b:  (color & 0xff) / 255.0
+		};
+	}
+	
 	public static function toRGBAFromInt(r:UInt, g:UInt, b:UInt, a:UInt = 255):RGBA
 	{
 		return {
@@ -54,7 +72,7 @@ class Color
 		};
 	}
 	
-	public static function toIntFromRGBA(color:RGBA):UInt
+	public static function toHexFromRGBA(color:RGBA):UInt
 	{
 		var a = Std.int(color.a * 255);
 		var r = Std.int(color.r * 255);
@@ -65,7 +83,7 @@ class Color
 		return c;
 	}
 	
-	public static function toIntFromRGB(color:RGB):UInt
+	public static function toHexFromRGB(color:RGB):UInt
 	{
 		var r = Std.int(color.r * 255);
 		var g = Std.int(color.g * 255);

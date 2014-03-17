@@ -33,7 +33,7 @@ class Factory
 		var data = new BitmapData(r * 2, r * 2, true, 0x00000000);
 		var shape = new Shape();
 		var rgba = Color.toRGBAFromHex(color);
-		shape.graphics.beginFill(Color.toIntFromRGB( { r: rgba.r, g: rgba.g, b: rgba.b } ), rgba.a);
+		shape.graphics.beginFill(Color.toHexFromRGB( { r: rgba.r, g: rgba.g, b: rgba.b } ), rgba.a);
 		shape.graphics.drawCircle(r, r, r);
 		shape.graphics.endFill();
 		data.draw(shape);

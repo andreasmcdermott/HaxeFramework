@@ -1,165 +1,128 @@
 package hxfw;
 import flash.geom.Point;
 import flash.geom.Rectangle;
-import hxfw.Collider.ColliderType;
 import hxfw.entities.Entity;
 
 /**
  * ...
  * @author Andreas McDermott
  */
-
- enum ColliderType
- {
-	 Box;
-	 Circle;
- }
  
 class Collider
 {	
 	// Static
 	
+	public static var Ignore:Int = -1;
 	public static var Solid:Int = 0;
+	private static var colliders:Array<Collider>;
 	
-	public static function resolveCollision(c1:Collider, c2:Collider)
+	private static function addCollider(c:Collider):Collider
 	{
-		var overlap:Point = new Point();
-		
-		/*if (c1.type == ColliderType.Box && c2.type == ColliderType.Box)
-			overlap = getCollisionBetweenBoxes(c1, c2);
-		else */if (c1.type == ColliderType.Circle && c2.type == ColliderType.Circle)
-			overlap = getCollisionBetweenCircles(c1, c2);
-		else if (c1.type == ColliderType.Circle && c2.type == ColliderType.Box) 
-			overlap = getCollisionBetweenCircleAndBox(c1, c2);
-		else if (c1.type == ColliderType.Box && c2.type == ColliderType.Circle)
-			overlap = getCollisionBetweenCircleAndBox(c2, c1);
+		if (colliders == null)
+			colliders = new Array<Collider>();
 			
-		if (overlap.length > 0)
+		colliders.push(c);
+		
+		return c;
+	}
+	
+	private static function removeCollider(c:Collider)
+	{
+		colliders.remove(c);
+	}
+	
+	public static function resolveCollisions():Void
+	{		
+		for(c1 in colliders)
 		{
-			if (c1.priority < c2.priority)
-				c2.owner.offset(-overlap.x, -overlap.y);
-			else if (c2.priority < c1.priority)
-				c1.owner.offset(overlap.x, overlap.y);
-			else
-			{
-				c1.owner.offset( -overlap.x / 2, -overlap.y / 2);
-				c2.owner.offset(overlap.x / 2, overlap.y / 2);
+			for(c2 in colliders)
+			{				
+				if (c1 == c2) continue;
+				if (!isColliding(c1, c2)) continue;
+				
+				if (c1.priority > Ignore && c2.priority > Ignore)
+					resolveCollision(c1, c2);
+					
+				c1.owner.onCollision(c2.owner);
+				c2.owner.onCollision(c1.owner);
 			}
-			
-			return true;
 		}
-		
-		return false;
+	}
+	
+	private static function resolveCollision(c1:Collider, c2:Collider)
+	{	
+		if (c1.priority <= c2.priority)
+		{
+			c2.seperateFrom(c1);
+		}
+		else
+		{
+			c1.seperateFrom(c2);
+		}
 	}
 	
 	public static function isColliding(c1:Collider, c2:Collider):Bool
 	{
-		var overlap:Point = new Point();
-		
-		if (c1.type == ColliderType.Circle && c2.type == ColliderType.Circle)
-			overlap = getCollisionBetweenCircles(c1, c2);
-		else if (c1.type == ColliderType.Circle && c2.type == ColliderType.Box) 
-			overlap = getCollisionBetweenCircleAndBox(c1, c2);
-		else if (c1.type == ColliderType.Box && c2.type == ColliderType.Circle)
-			overlap = getCollisionBetweenCircleAndBox(c2, c1);
-		
-		return overlap.length != 0.0;
-	}
-	
-	/*private static function getCollisionBetweenBoxes(c1:Collider, c2:Collider):Point
-	{
-		var overlap:Point = new Point();
-		
-		var c1Rect = getCollisionBox(c1);
-		var c2Rect = getCollisionBox(c2);
-		
-		if (c1Rect.intersects(c2Rect))
-		{
-			var intersectionArea = c1Rect.intersection(c2Rect);
-			
-		}
-		
-		return overlap;
-	}*/
-	
-	private static function getCollisionBetweenCircles(c1:Collider, c2:Collider):Point
-	{
-		var overlap:Point = new Point();
-		
-		var c1Pos = c1.owner.getPos();
-		var c2Pos = c2.owner.getPos();
-		var dist = Point.distance(c1Pos, c2Pos);
-		
-		if (dist < c1.radius + c2.radius)
-		{
-			overlap = new Point(c1Pos.x - c2Pos.x, c1Pos.y - c2Pos.y);
-			overlap.normalize(dist);
-		}
-		
-		return overlap;
-	}
-	
-	private static function getCollisionBetweenCircleAndBox(circle:Collider, box:Collider):Point
-	{
-		var overlap:Point = new Point();
-		
-		var rect = getCollisionBox(box);
-		
-		var circlePos = circle.owner.getPos();
-		circlePos.offset(circle.owner.width / 2, circle.owner.height / 2);
-	
-		if (rect.containsPoint(new Point(circlePos.x + circle.radius, circlePos.y)))
-			overlap.setTo(-circle.radius - (circlePos.x - rect.left), 0);
-		else if (rect.containsPoint(new Point(circlePos.x - circle.radius, circlePos.y)))
-			overlap.setTo(circle.radius - (circlePos.x - rect.right), 0);
-		else if (rect.containsPoint(new Point(circlePos.x, circlePos.y + circle.radius)))
-			overlap.setTo(0, -circle.radius - (circlePos.y - rect.top));
-		else if (rect.containsPoint(new Point(circlePos.x, circlePos.y - circle.radius)))
-			overlap.setTo(0, circle.radius - (circlePos.y - rect.bottom));
-			
-		return overlap;
-	}
-	
-	private static function getCollisionBox(box:Collider):Rectangle
-	{
-		if (box.type != ColliderType.Box)
-			return null;
-			
-		var rect = box.owner.getRect();
-		rect.left += box.xOffset;
-		rect.right -= box.xOffset;
-		rect.top += box.yOffset;
-		rect.bottom -= box.yOffset;
-		return rect;
-	}
-	
-	public static function createBoxCollider(xOffset:Float, yOffset:Float, priority:Int, e:Entity):Collider
-	{
-		var collider = new Collider(ColliderType.Box, priority, e);
-		collider.xOffset = xOffset;
-		collider.yOffset = yOffset;
-		return collider;
-	}
-	
-	public static function createCircleCollider(radius:Float, priority:Int, e:Entity):Collider
-	{
-		var collider = new Collider(ColliderType.Circle, priority, e);
-		collider.radius = radius;
-		return collider;
+		c1.updateCollisionBox();
+		c2.updateCollisionBox();
+		return c1.collisionBox.intersects(c2.collisionBox);
 	}
 	
 	// Instance
-	private var type:ColliderType;
 	private var priority:Int;
 	private var owner:Entity;
 	private var xOffset:Float;
 	private var yOffset:Float;
-	private var radius:Float;
+	private var collisionBox:Rectangle;
 	
-	private function new(type:ColliderType, priority:Int, owner:Entity) 
+	public function new(owner:Entity, prio:Int = 0) 
 	{
-		this.type = type;
 		this.owner = owner;
-		this.priority = priority;
+		priority = prio;
+		xOffset = yOffset = 0;
+		collisionBox = new Rectangle();
+		addCollider(this);
+	}
+	
+	public function setPriority(p:Int):Collider
+	{
+		priority = p;
+		return this;
+	}
+	
+	public function setOffset(x:Float, y:Float):Collider
+	{
+		xOffset = x;
+		yOffset = y;
+		return this;
+	}
+	
+	public function seperateFrom(other:Collider)
+	{	
+		var box = collisionBox;
+		var otherBox = other.collisionBox;
+		
+		if (otherBox.contains(box.right, box.top + box.height / 2))
+			owner.setPos(otherBox.left - box.width, owner.y);
+		else if(otherBox.contains(box.left, box.top + box.height / 2))
+			owner.setPos(otherBox.right, owner.y);
+		else if (otherBox.contains(box.left + box.width / 2, box.bottom))
+			owner.setPos(owner.x, otherBox.top - box.height);
+		else if (otherBox.contains(box.left + box.width / 2, box.top))
+			owner.setPos(owner.x, otherBox.bottom);
+	}
+	
+	private function updateCollisionBox():Void
+	{		
+		collisionBox.copyFrom(owner.getRect());
+		collisionBox.left += xOffset;
+		collisionBox.top += yOffset;
+		collisionBox.right -= xOffset;
+		collisionBox.bottom -= yOffset;
+	}
+	
+	public function delete():Void
+	{
+		removeCollider(this);
 	}
 }

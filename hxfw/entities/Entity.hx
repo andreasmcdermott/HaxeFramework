@@ -29,6 +29,7 @@ class Entity extends Rectangle
 	private var inherit:Bool;
 	private var parent:Group;
 	private var timer:Timer;
+	private var lastFrame:Rectangle;
 
 	public function new(x:Float, y:Float, w:Float, h:Float) 
 	{
@@ -40,13 +41,21 @@ class Entity extends Rectangle
 		r = g = b = a = 1.0;
 		originX = originY = 0.5;
 		inherit = false;
-		collider = Collider.createBoxCollider(0.0, 0.0, Collider.Solid, this);
+		lastFrame = new Rectangle();
 	}
 	
 	public function inheritFromParent(inherit:Bool):Entity
 	{
 		this.inherit = inherit;
 		return this;
+	}
+	
+	public function removeSelf()
+	{
+		if (parent != null)
+		{
+			parent.removeChild(this);
+		}
 	}
 	
 	public function assignDrawable(drawable:IBitmapDrawable):Entity
@@ -107,7 +116,7 @@ class Entity extends Rectangle
 	
 	public inline function getColor():UInt
 	{
-		return Color.toIntFromRGBA( { r: r, g: g, b:b, a:a } );
+		return Color.toHexFromRGBA( { r: r, g: g, b:b, a:a } );
 	}
 	
 	public inline function getAngle():Float
@@ -157,6 +166,11 @@ class Entity extends Rectangle
 		return new Rectangle(pos.x, pos.y, width * scale.x, height * scale.y);
 	}
 	
+	public function getLastRect():Rectangle
+	{
+		return lastFrame != null ? lastFrame : getRect();
+	}
+	
 	private inline function getMatrix():Matrix
 	{
 		var matrix = new Matrix();
@@ -171,19 +185,22 @@ class Entity extends Rectangle
 		return matrix;
 	}
 	
-	public function resolveCollision(other:Entity):Bool
+	public function onCollision(other:Entity)
 	{
-		return Collider.resolveCollision(collider, other.collider);
 	}
 	
 	private function update()
 	{
+		lastFrame.x = x;
+		lastFrame.y = y;
+		lastFrame.width = width * scaleX;
+		lastFrame.height = height * scaleY;
 		timer.update();
 	}
 	
 	private function draw()
 	{
 		if (drawable == null) return;
-		Camera.drawToActiveCamera(drawable, getMatrix(), new ColorTransform(r, g, b, a), getRect());
+		Camera.drawToActiveCamera(drawable, getMatrix(), new ColorTransform(r, g, b, a));
 	}
 }

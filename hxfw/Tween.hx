@@ -159,6 +159,19 @@ class Tween
 		}
 	}
 	
+	public function from(variables:Dynamic):Tween
+	{
+		for (key in Reflect.fields(variables))
+		{
+			var newValue:Float = Reflect.field(variables, key);
+			Reflect.setField(target, key, newValue);
+			var field = fields.get(key);
+			field.start = newValue;
+			field.difference = field.end - field.start;
+		}
+		return this;
+	}
+	
 	public function delay(time:Float):Tween
 	{
 		delayCounter = time;

@@ -27,31 +27,20 @@ class Group extends Entity
 	public function removeChild(child:Entity)
 	{
 		child.parent = null;
+		if(child.collider != null)
+			child.collider.delete();
 		children.remove(child);
 	}
 	
 	public function removeChildren()
 	{
 		for (child in children)
-			child.parent = null;
-		children = new Array<Entity>();
+			removeChild(child);
 	}
 	
 	public function iterator():Iterator<Entity>
 	{
 		return children.iterator();
-	}
-	
-	override public function resolveCollision(other:Entity):Bool
-	{
-		var collision:Bool = super.resolveCollision(other);
-		for (child in children)
-		{
-			if (child.resolveCollision(other))
-				collision = true;
-		}
-		
-		return collision;
 	}
 	
 	override private function update()
